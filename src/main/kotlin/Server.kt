@@ -1,10 +1,9 @@
 package com.aznos
 
 import com.aznos.protocol.readHandshakePacket
-import jdk.internal.org.jline.utils.Colors.s
+import kotlinx.coroutines.*
 import java.net.ServerSocket
 import java.net.Socket
-import kotlin.concurrent.thread
 
 object Server {
     /**
@@ -13,13 +12,22 @@ object Server {
      * @param port The port to start the server on (default 25565)
      */
     fun start(port: Int = 25565) {
+        val serverScope = CoroutineScope(Dispatchers.IO)
         val serverSocket = ServerSocket(port)
         println("Bullet server started on port $port")
 
-        while(true) {
-            val clientSocket = serverSocket.accept()
-            thread(start = true) {
-                handleClient(clientSocket)
+        //Check for client connections
+        serverScope.launch {
+            while(isActive) {
+                val clientSocket: Socket = withContext(Dispatchers.IO) { serverSocket.accept() }
+                launch(Dispatchers.IO) { handleClient(clientSocket) }
+            }
+        }
+
+        //Keep the server running
+        runBlocking {
+            while(true) {
+                delay(1000)
             }
         }
     }
