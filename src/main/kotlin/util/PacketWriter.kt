@@ -19,6 +19,16 @@ object PacketWriter {
     }
 
     /**
+     * Writes a [Long] to the [OutputStream] in big-endian order.
+     *
+     * @param value The long to write.
+     */
+    fun OutputStream.writeLong(value: Long) {
+        this.writeInt((value shr 32).toInt())
+        this.writeInt((value and 0xFFFFFFFFL).toInt())
+    }
+
+    /**
      * Writes a [Boolean] to the [OutputStream].
      *
      * @param value The boolean to write.
@@ -64,8 +74,7 @@ object PacketWriter {
      */
     fun OutputStream.writeDouble(value: Double) {
         val longBits = java.lang.Double.doubleToLongBits(value)
-        this.writeInt(((longBits shr 32) and 0xFFFFFFFFL).toInt())
-        this.writeInt((longBits and 0xFFFFFFFFL).toInt())
+        this.writeLong(longBits)
     }
 
     /**
