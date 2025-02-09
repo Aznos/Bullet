@@ -1,6 +1,6 @@
 package com.aznos
 
-import com.aznos.protocol.readHandshakePacket
+import com.aznos.session.SessionManager
 import kotlinx.coroutines.*
 import java.net.ServerSocket
 import java.net.Socket
@@ -39,25 +39,20 @@ object Server {
      * @param clientSocket The [Socket] representing the client connection
      */
     private fun handleClient(clientSocket: Socket) {
-        println("New connection from ${clientSocket.inetAddress.hostAddress}")
+        val player = SessionManager.addPlayer(clientSocket)
+        println("Player connected: ${player.name}")
+
         try {
-            val input = clientSocket.getInputStream()
-            val handshake = input.readHandshakePacket()
-            if(handshake != null) {
-                println(
-                    "Received handshake: ProtocolVersion=${handshake.protocolVersion}, " +
-                    "ServerAddress='${handshake.serverAddress}', " +
-                    "ServerPort=${handshake.serverPort}, " +
-                    "NextState=${handshake.nextState}"
-                )
-            } else {
-                println("Received non-handshake packet from ${clientSocket.inetAddress.hostAddress}")
+            clientSocket.getInputStream().bufferedReader().use { reader ->
+                val line = reader.readLine()
+                println("Received from ${player.name}: $line")
             }
         } catch(e: Exception) {
-            println("Error handling client ${clientSocket.inetAddress.hostAddress}: ${e.message}")
+            println("Error handling ${player.name}: ${e.message}")
         } finally {
+            SessionManager.removePlayer(player.id)
             clientSocket.close()
-            println("Closed connection with ${clientSocket.inetAddress.hostAddress}")
+            println("Connection closed for ${player.name}")
         }
     }
 }
