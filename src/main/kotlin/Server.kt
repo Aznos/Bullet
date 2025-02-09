@@ -1,6 +1,8 @@
 package com.aznos
 
 import com.aznos.session.SessionManager
+import com.aznos.util.PacketSender
+import com.aznos.world.World
 import kotlinx.coroutines.*
 import java.net.ServerSocket
 import java.net.Socket
@@ -43,9 +45,20 @@ object Server {
         println("Player connected: ${player.name}")
 
         try {
+            val output = clientSocket.getOutputStream()
+
+            PacketSender.sendLoginSuccess(output, player.name)
+            PacketSender.sendJoinGame(output, player.id)
+            PacketSender.sendSpawnPosition(output, 0.0, 64.0, 0.0)
+
+            val chunkData = World.generateGrassChunk()
+            PacketSender.sendChunkData(output, 0, 0, chunkData)
+
             clientSocket.getInputStream().bufferedReader().use { reader ->
-                val line = reader.readLine()
-                println("Received from ${player.name}: $line")
+                while(true) {
+                    val line = reader.readLine() ?: break
+                    println("Received from ${player.name}: $line")
+                }
             }
         } catch(e: Exception) {
             println("Error handling ${player.name}: ${e.message}")
