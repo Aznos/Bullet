@@ -34,8 +34,7 @@ data class HandshakePacket(
  * @throws RuntimeException if an error occurs during reading
  */
 fun InputStream.readHandshakePacket(): HandshakePacket? {
-    val varIntUtil = VarInt()
-    val packetLen = varIntUtil.run { this@readHandshakePacket.readVarInt() }
+    val packetLen = VarInt.run { this@readHandshakePacket.readVarInt() }
 
     val packetData = ByteArray(packetLen)
     var bytesRead = 0
@@ -46,17 +45,17 @@ fun InputStream.readHandshakePacket(): HandshakePacket? {
     }
 
     val packetStream = packetData.inputStream()
-    val packetID = varIntUtil.run { packetStream.readVarInt() }
+    val packetID = VarInt.run { packetStream.readVarInt() }
     if(packetID != 0x00) return null; //Not a handshake packet
 
-    val protocolVersion = varIntUtil.run { packetStream.readVarInt() }
-    val serverAddress = varIntUtil.run { packetStream.readString() }
+    val protocolVersion = VarInt.run { packetStream.readVarInt() }
+    val serverAddress = VarInt.run { packetStream.readString() }
 
     val portBytes = ByteArray(2)
     if(packetStream.read(portBytes) != 2) throw RuntimeException("Could not read server port")
     val serverPort = ((portBytes[0].toInt() and 0xFF) shl 8) or (portBytes[1].toInt() and 0xFF)
 
-    val nextState = varIntUtil.run { packetStream.readVarInt() }
+    val nextState = VarInt.run { packetStream.readVarInt() }
 
     return HandshakePacket(protocolVersion, serverAddress, serverPort, nextState)
 }

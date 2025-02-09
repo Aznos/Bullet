@@ -1,9 +1,8 @@
 package com.aznos.util
 
 import java.io.InputStream
-import java.nio.charset.Charset
 
-class VarInt {
+object VarInt {
     /**
      * Reads VarInt from InputStream
      *
