@@ -6,8 +6,7 @@ import com.aznos.event.impl.StatusResponseEvent
 fun main() {
     EventManager.registerListener<StatusResponseEvent> { e ->
         e.maxPlayers = 25
-        e.motd = "server!"
-        e.onlinePlayers = 10
+        e.motd = "This is a long motd!"
     }
 
     Server.start()

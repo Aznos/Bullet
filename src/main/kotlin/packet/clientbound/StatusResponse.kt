@@ -3,6 +3,7 @@ package com.aznos.packet.clientbound
 import com.aznos.event.EventManager
 import com.aznos.event.impl.StatusResponseEvent
 import com.aznos.packet.PacketWriter
+import com.google.gson.JsonObject
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 
@@ -20,13 +21,23 @@ object StatusResponse {
         val event = StatusResponseEvent()
         EventManager.fireEvent(event)
 
-        val jsonResponse = "{\"version\": {\"name\": \"${event.version}\", \"protocol\": ${event.protocol}}, " +
-                "\"players\": {\"max\": ${event.maxPlayers}, \"online\": ${event.onlinePlayers}}, " +
-                "\"description\": {\"text\": \"${event.motd}\"}}"
+        val jsonResponse = JsonObject().apply {
+            add("version", JsonObject().apply {
+                addProperty("name", event.version)
+                addProperty("protocol", event.protocol)
+            })
+            add("players", JsonObject().apply {
+                addProperty("max", event.maxPlayers)
+                addProperty("online", event.onlinePlayers)
+            })
+            add("description", JsonObject().apply {
+                addProperty("text", event.motd)
+            })
+        }
 
         val payloadBuffer = ByteArrayOutputStream()
         with(PacketWriter) {
-            payloadBuffer.writeString(jsonResponse)
+            payloadBuffer.writeString(jsonResponse.toString())
         }
 
         val payload = payloadBuffer.toByteArray()
