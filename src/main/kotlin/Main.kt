@@ -1,11 +1,13 @@
 package com.aznos
 
 import com.aznos.event.EventManager
-import com.aznos.event.PongEvent
+import com.aznos.event.impl.StatusResponseEvent
 
 fun main() {
-    EventManager.registerListener<PongEvent> { e ->
-        println("Pong request received with timestamp: ${e.timestamp}")
+    EventManager.registerListener<StatusResponseEvent> { e ->
+        e.maxPlayers = 25
+        e.motd = "server!"
+        e.onlinePlayers = 10
     }
 
     Server.start()

@@ -1,5 +1,7 @@
 package com.aznos.packet.clientbound
 
+import com.aznos.event.EventManager
+import com.aznos.event.impl.StatusResponseEvent
 import com.aznos.packet.PacketWriter
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
@@ -15,10 +17,12 @@ object StatusResponse {
      */
     fun sendStatusResponse(output: OutputStream) {
         val packetID = 0x00
-        val jsonResponse =
-            "{\"version\": {\"name\": \"1.21.4\", \"protocol\": 769}, " +
-            "\"players\": {\"max\": 100, \"online\": 0}, " +
-            "\"description\": {\"text\": \"§6Bullet\"}}"
+        val event = StatusResponseEvent()
+        EventManager.fireEvent(event)
+
+        val jsonResponse = "{\"version\": {\"name\": \"${event.version}\", \"protocol\": ${event.protocol}}, " +
+                "\"players\": {\"max\": ${event.maxPlayers}, \"online\": ${event.onlinePlayers}}, " +
+                "\"description\": {\"text\": \"${event.motd}\"}}"
 
         val payloadBuffer = ByteArrayOutputStream()
         with(PacketWriter) {

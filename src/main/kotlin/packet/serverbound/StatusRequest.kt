@@ -2,7 +2,7 @@ package com.aznos.packet.serverbound
 
 import com.aznos.Server
 import com.aznos.event.EventManager
-import com.aznos.event.PongEvent
+import com.aznos.event.impl.PongEvent
 import com.aznos.packet.clientbound.PongResponse
 import com.aznos.packet.clientbound.StatusResponse
 import com.aznos.util.VarInt.readVarInt
