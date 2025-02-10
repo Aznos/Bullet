@@ -4,14 +4,17 @@ import com.aznos.event.EventListener
 import com.aznos.packet.serverbound.StatusRequest
 import com.aznos.protocol.readHandshakePacket
 import kotlinx.coroutines.*
+import mu.KotlinLogging
 import java.net.ServerSocket
 import java.net.Socket
 
 object Server {
+    val logger = KotlinLogging.logger("Bullet")
+
     /**
      * Event listener for bullet events
      */
-    var eventListener: EventListener = object : EventListener {
+    var bulletEventListener: EventListener = object : EventListener {
         override fun onPongReceived(timestamp: Long) {}
     }
 
@@ -21,7 +24,7 @@ object Server {
      * @param listener The custom [EventListener] to use
      */
     fun setEventListener(listener: EventListener) {
-        eventListener = listener
+        bulletEventListener = listener
     }
 
     /**
@@ -32,7 +35,7 @@ object Server {
     fun start(port: Int = 25565) {
         val serverScope = CoroutineScope(Dispatchers.IO)
         val serverSocket = ServerSocket(port)
-        println("Bullet server started on port $port")
+        logger.info("Bullet server started on port $port")
 
         //Check for client connections
         serverScope.launch {
@@ -57,28 +60,18 @@ object Server {
      * @param clientSocket The [Socket] representing the client connection
      */
     private fun handleClient(clientSocket: Socket) {
-        println("New connection from ${clientSocket.inetAddress.hostAddress}")
         try {
             val input = clientSocket.getInputStream()
             val handshake = input.readHandshakePacket()
             if(handshake != null) {
-                println(
-                    "Received handshake: ProtocolVersion=${handshake.protocolVersion}, " +
-                    "ServerAddress='${handshake.serverAddress}', " +
-                    "ServerPort=${handshake.serverPort}, NextState=${handshake.nextState}"
-                )
-
                 if(handshake.nextState == 1) {
                     StatusRequest.handleStatus(clientSocket)
                 }
-            } else {
-                println("Received non-handshake packet from ${clientSocket.inetAddress.hostAddress}")
             }
         } catch(e: Exception) {
-            println("Error handling client ${clientSocket.inetAddress.hostAddress}: ${e.message}")
+            logger.warn("Error handling client ${clientSocket.inetAddress.hostAddress}: ${e.message}")
         } finally {
             clientSocket.close()
-            println("Closed connection with ${clientSocket.inetAddress.hostAddress}")
         }
     }
 }

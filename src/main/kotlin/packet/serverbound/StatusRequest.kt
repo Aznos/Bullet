@@ -1,6 +1,7 @@
 package com.aznos.packet.serverbound
 
-import com.aznos.Server.eventListener
+import com.aznos.Server
+import com.aznos.Server.bulletEventListener
 import com.aznos.packet.clientbound.PongResponse
 import com.aznos.packet.clientbound.StatusResponse
 import com.aznos.util.VarInt.readVarInt
@@ -25,31 +26,27 @@ object StatusRequest {
             val requestPacketID = input.readVarInt()
 
             if(requestPacketID != 0x00) {
-                println("Expected Status Request (0x00) but got packetID: $requestPacketID")
+                Server.logger.warn("Expected Status Request (0x00) but got packetID: $requestPacketID")
                 return
             }
 
-            println("Received Status Request from ${clientSocket.inetAddress.hostAddress}")
             StatusResponse.sendStatusResponse(output)
-            println("Sent Status Response to ${clientSocket.inetAddress.hostAddress}")
 
             val pingLength = input.readVarInt()
             val pingPacketID = input.readVarInt()
             if(pingPacketID != 0x01) {
-                println("Expected Ping Request (0x01) but got packet ID: $pingPacketID")
+                Server.logger.warn("Expected Ping Request (0x01) but got packet ID: $pingPacketID")
                 return
             }
 
             val dataInput = DataInputStream(input)
             val timestamp = dataInput.readLong()
-            println("Received Ping Request with timestamp: $timestamp from ${clientSocket.inetAddress.hostAddress}")
 
-            eventListener.onPongReceived(timestamp)
+            bulletEventListener.onPongReceived(timestamp)
 
             PongResponse.sendPongResponse(output, timestamp)
-            println("Sent Pong Response to ${clientSocket.inetAddress.hostAddress}")
         } catch(e: Exception) {
-            println("Error handling status for ${clientSocket.inetAddress.hostAddress}: ${e.message}")
+            Server.logger.warn("Error handling status for ${clientSocket.inetAddress.hostAddress}: ${e.message}")
         }
     }
 }
