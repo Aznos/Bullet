@@ -1,5 +1,6 @@
-package com.aznos.packet
+package com.aznos.packet.clientbound
 
+import com.aznos.packet.PacketWriter
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 
