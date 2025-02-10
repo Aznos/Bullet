@@ -1,8 +1,6 @@
 package com.aznos
 
-import com.aznos.session.SessionManager
-import com.aznos.util.PacketSender
-import com.aznos.world.World
+import com.aznos.protocol.readHandshakePacket
 import kotlinx.coroutines.*
 import java.net.ServerSocket
 import java.net.Socket
@@ -41,31 +39,24 @@ object Server {
      * @param clientSocket The [Socket] representing the client connection
      */
     private fun handleClient(clientSocket: Socket) {
-        val player = SessionManager.addPlayer(clientSocket)
-        println("Player connected: ${player.name}")
-
+        println("New connection from ${clientSocket.inetAddress.hostAddress}")
         try {
-            val output = clientSocket.getOutputStream()
-
-            PacketSender.sendLoginSuccess(output, player.name)
-            PacketSender.sendJoinGame(output, player.id)
-            PacketSender.sendSpawnPosition(output, 0.0, 64.0, 0.0)
-
-            val chunkData = World.generateGrassChunk()
-            PacketSender.sendChunkData(output, 0, 0, chunkData)
-
-            clientSocket.getInputStream().bufferedReader().use { reader ->
-                while(true) {
-                    val line = reader.readLine() ?: break
-                    println("Received from ${player.name}: $line")
-                }
+            val input = clientSocket.getInputStream()
+            val handshake = input.readHandshakePacket()
+            if(handshake != null) {
+                println(
+                    "Received handshake: ProtocolVersion=${handshake.protocolVersion}, " +
+                    "ServerAddress='${handshake.serverAddress}', " +
+                    "ServerPort=${handshake.serverPort}, NextState=${handshake.nextState}"
+                )
+            } else {
+                println("Received non-handshake packet from ${clientSocket.inetAddress.hostAddress}")
             }
         } catch(e: Exception) {
-            println("Error handling ${player.name}: ${e.message}")
+            println("Error handling client ${clientSocket.inetAddress.hostAddress}: ${e.message}")
         } finally {
-            SessionManager.removePlayer(player.id)
             clientSocket.close()
-            println("Connection closed for ${player.name}")
+            println("Closed connection with ${clientSocket.inetAddress.hostAddress}")
         }
     }
 }
