@@ -1,13 +1,12 @@
 package com.aznos
 
-import com.aznos.event.EventListener
+import com.aznos.event.EventManager
+import com.aznos.event.PongEvent
 
 fun main() {
-    Server.setEventListener(object : EventListener {
-        override fun onPongReceived(timestamp: Long) {
-            Server.logger.info("Pong request received with timestamp: $timestamp")
-        }
-    })
+    EventManager.registerListener<PongEvent> { e ->
+        println("Pong request received with timestamp: ${e.timestamp}")
+    }
 
     Server.start()
 }

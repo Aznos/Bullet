@@ -1,7 +1,8 @@
 package com.aznos.packet.serverbound
 
 import com.aznos.Server
-import com.aznos.Server.bulletEventListener
+import com.aznos.event.EventManager
+import com.aznos.event.PongEvent
 import com.aznos.packet.clientbound.PongResponse
 import com.aznos.packet.clientbound.StatusResponse
 import com.aznos.util.VarInt.readVarInt
@@ -42,7 +43,7 @@ object StatusRequest {
             val dataInput = DataInputStream(input)
             val timestamp = dataInput.readLong()
 
-            bulletEventListener.onPongReceived(timestamp)
+            EventManager.fireEvent(PongEvent(timestamp))
 
             PongResponse.sendPongResponse(output, timestamp)
         } catch(e: Exception) {
