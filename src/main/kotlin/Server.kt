@@ -1,5 +1,6 @@
 package com.aznos
 
+import com.aznos.event.EventListener
 import com.aznos.packet.serverbound.StatusRequest
 import com.aznos.protocol.readHandshakePacket
 import kotlinx.coroutines.*
@@ -7,6 +8,22 @@ import java.net.ServerSocket
 import java.net.Socket
 
 object Server {
+    /**
+     * Event listener for bullet events
+     */
+    var eventListener: EventListener = object : EventListener {
+        override fun onPongReceived(timestamp: Long) {}
+    }
+
+    /**
+     * Sets custom event listener
+     *
+     * @param listener The custom [EventListener] to use
+     */
+    fun setEventListener(listener: EventListener) {
+        eventListener = listener
+    }
+
     /**
      * Start the server on the given [port]
      *
