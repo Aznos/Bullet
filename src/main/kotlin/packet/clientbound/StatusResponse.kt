@@ -16,9 +16,9 @@ object StatusResponse {
     fun sendStatusResponse(output: OutputStream) {
         val packetID = 0x00
         val jsonResponse =
-            "{\"version\": {\"name\": \"Bullet 1.0\", \"protocol\": 761}, " +
+            "{\"version\": {\"name\": \"1.21.4\", \"protocol\": 769}, " +
             "\"players\": {\"max\": 100, \"online\": 0}, " +
-            "\"description\": {\"text\": \"\"}}"
+            "\"description\": {\"text\": \"§6Bullet\"}}"
 
         val payloadBuffer = ByteArrayOutputStream()
         with(PacketWriter) {
