@@ -7,6 +7,14 @@ import java.io.DataInputStream
 import java.net.Socket
 
 object StatusRequest {
+    /**
+     * Handles a status request from the client
+     *
+     * Reads a status request packet (0x00) then sends a status response
+     * After reads a ping request packet (0x01) with a timestamp then sends a pong response
+     *
+     * @param clientSocket The [Socket] of the client
+     */
     fun handleStatus(clientSocket: Socket) {
         try {
             val input = clientSocket.getInputStream()

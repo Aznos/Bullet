@@ -1,5 +1,6 @@
 package com.aznos
 
+import com.aznos.packet.serverbound.StatusRequest
 import com.aznos.protocol.readHandshakePacket
 import kotlinx.coroutines.*
 import java.net.ServerSocket
@@ -49,6 +50,10 @@ object Server {
                     "ServerAddress='${handshake.serverAddress}', " +
                     "ServerPort=${handshake.serverPort}, NextState=${handshake.nextState}"
                 )
+
+                if(handshake.nextState == 1) {
+                    StatusRequest.handleStatus(clientSocket)
+                }
             } else {
                 println("Received non-handshake packet from ${clientSocket.inetAddress.hostAddress}")
             }
