@@ -5,7 +5,7 @@ import java.io.OutputStream
 /**
  * Provides utility functions for writing primitive types  to an OutputStream
  */
-class PacketWriter {
+object PacketWriter {
     fun OutputStream.writeInt(value: Int) {
         this.write((value shr 24) and 0xFF)
         this.write((value shr 16) and 0xFF)
