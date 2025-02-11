@@ -1,6 +1,5 @@
 package com.aznos.packet.serverbound
 
-import com.aznos.Server
 import com.aznos.util.VarInt.readVarInt
 import java.io.InputStream
 
@@ -12,7 +11,6 @@ object LoginAcknowledgedPacket {
         val packetLen = input.readVarInt()
         val packetID = input.readVarInt()
 
-        Server.logger.info("LoginAcknowledgedPacket received: packetID=$packetID, packetLen=$packetLen")
         return packetID == 0x03
     }
 }

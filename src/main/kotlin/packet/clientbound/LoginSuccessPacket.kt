@@ -1,6 +1,7 @@
 package com.aznos.packet.clientbound
 
-import com.aznos.Server
+import com.aznos.event.EventManager
+import com.aznos.event.impl.PlayerLoginEvent
 import com.aznos.packet.PacketWriter
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
@@ -34,9 +35,9 @@ object LoginSuccessPacket {
             output.writeVarInt(packetID)
         }
 
+        EventManager.fireEvent(PlayerLoginEvent(username, uuid))
+
         output.write(payload)
         output.flush()
-
-        Server.logger.info("LoginSuccessPacket sent: UUID=$uuid, Username=$username")
     }
 }

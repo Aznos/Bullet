@@ -56,10 +56,7 @@ object Server {
                 } else if(handshake.nextState == 2) {
                     val loginStart = input.readLoginStartPacket()
                     if(loginStart != null) {
-                        logger.info("Login start received for ${loginStart.name}")
-
                         LoginSuccessPacket.send(output, loginStart.name)
-                        logger.info("Sent login success for ${loginStart.name}")
                     }
                 }
             }
