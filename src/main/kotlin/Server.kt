@@ -1,6 +1,8 @@
 package com.aznos
 
+import com.aznos.packet.clientbound.LoginSuccessPacket
 import com.aznos.packet.serverbound.StatusRequest
+import com.aznos.packet.serverbound.readLoginStartPacket
 import com.aznos.protocol.readHandshakePacket
 import kotlinx.coroutines.*
 import mu.KotlinLogging
@@ -45,10 +47,20 @@ object Server {
     private fun handleClient(clientSocket: Socket) {
         try {
             val input = clientSocket.getInputStream()
+            val output = clientSocket.getOutputStream()
+
             val handshake = input.readHandshakePacket()
             if(handshake != null) {
                 if(handshake.nextState == 1) {
                     StatusRequest.handleStatus(clientSocket)
+                } else if(handshake.nextState == 2) {
+                    val loginStart = input.readLoginStartPacket()
+                    if(loginStart != null) {
+                        logger.info("Login start received for ${loginStart.name}")
+
+                        LoginSuccessPacket.send(output, loginStart.name)
+                        logger.info("Sent login success for ${loginStart.name}")
+                    }
                 }
             }
         } catch(e: Exception) {
