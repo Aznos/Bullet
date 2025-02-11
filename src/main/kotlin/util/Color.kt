@@ -30,20 +30,6 @@ object Color {
     const val RESET = "§r"
 
     /**
-     * Converts a hex color (ex. #FF5733) to minecrafts rgb format (§x§f§f§5§7§3§3)
-     *
-     * @param hex The hex color to convert
-     * @return The formatted minecraft chat color string
-     * @throws IllegalArgumentException if the hex string is invalid
-     */
-    fun hex(hex: String): String {
-        val cleanHex = hex.removePrefix("#")
-        require(cleanHex.length == 6) { "Invalid hex color: $hex" }
-
-        return "§x" + cleanHex.chunked(1).joinToString("") { "§$it" } + RESET
-    }
-
-    /**
      * Replaces color placeholders with minecraft color codes
      *
      * Usage example:
@@ -53,7 +39,7 @@ object Color {
      * @return The text formatted with minecraft color codes
      */
     fun colorize(text: String): String {
-        var formattedText = text
+        val formattedText = text
             .replace("&0", BLACK)
             .replace("&1", DARK_BLUE)
             .replace("&2", DARK_GREEN)
@@ -75,11 +61,6 @@ object Color {
             .replace("&m", STRIKETHROUGH)
             .replace("&o", ITALIC)
             .replace("&r", RESET)
-
-        val hexPattern = Regex("&hex\\(#([a-fA-F0-9]{6})\\)")
-        formattedText = hexPattern.replace(formattedText) {
-            hex("#${it.groupValues[1]}")
-        }
 
         return formattedText
     }

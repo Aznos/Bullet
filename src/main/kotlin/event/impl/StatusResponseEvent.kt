@@ -14,5 +14,5 @@ data class StatusResponseEvent(
     var protocol: Int = 769,
     var maxPlayers: Int = 100,
     var onlinePlayers: Int = 0,
-    var motd: String = "${Color.GOLD}A server that runs as fast as a Bullet"
+    var motd: String = "${Color.GOLD}A server that runs as fast as a ${Color.YELLOW}${Color.UNDERLINE}Bullet"
 ) : Event
