@@ -14,8 +14,9 @@ object PacketWriter {
     }
 
     fun OutputStream.writeLong(value: Long) {
-        this.writeInt((value shr 32).toInt())
-        this.writeInt((value and 0xFFFFFFFFL).toInt())
+        for(i in 7 downTo 0) {
+            this.write(((value shr (i * 8)) and 0xFF).toInt())
+        }
     }
 
     fun OutputStream.writeByte(value: Int) {
@@ -35,7 +36,7 @@ object PacketWriter {
             }
 
             this.write((v and 0x7F) or 0x80)
-            v = v ushr 8
+            v = v ushr 7
         }
     }
 
