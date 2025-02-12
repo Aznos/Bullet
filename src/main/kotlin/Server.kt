@@ -1,11 +1,15 @@
 package com.aznos
 
+import com.aznos.event.EventManager
+import com.aznos.event.impl.PlayerDisconnectEvent
 import com.aznos.packet.clientbound.LoginSuccessPacket
 import com.aznos.packet.serverbound.StatusRequest
 import com.aznos.packet.serverbound.readLoginStartPacket
 import com.aznos.protocol.readHandshakePacket
+import com.aznos.util.VarInt.readVarInt
 import kotlinx.coroutines.*
 import mu.KotlinLogging
+import java.io.InputStream
 import java.net.ServerSocket
 import java.net.Socket
 
@@ -57,6 +61,7 @@ object Server {
                     val loginStart = input.readLoginStartPacket()
                     if(loginStart != null) {
                         LoginSuccessPacket.send(output, loginStart.name)
+                        listenForDisconnectPacket(input, loginStart.name)
                     }
                 }
             }
@@ -64,6 +69,22 @@ object Server {
             logger.warn("Error handling client ${clientSocket.inetAddress.hostAddress}: ${e.message}")
         } finally {
             clientSocket.close()
+        }
+    }
+
+    private fun listenForDisconnectPacket(input: InputStream, username: String) {
+        try {
+            while(true) {
+                val packetLen = input.readVarInt()
+                val packetID = input.readVarInt()
+
+                if(packetID == 0x00) {
+                    EventManager.fireEvent(PlayerDisconnectEvent(username))
+                    break
+                }
+            }
+        } catch(e: Exception) {
+            EventManager.fireEvent(PlayerDisconnectEvent(username))
         }
     }
 }
