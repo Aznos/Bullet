@@ -5,6 +5,7 @@ import io.ktor.utils.io.core.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import packets.ClientboundPacket
+import util.Color
 
 @Serializable
 data class StatusResponsePacket(
@@ -43,7 +44,7 @@ data class StatusResponsePacket(
             return StatusResponsePacket(
                 version = Version(name = "1.21.4", protocol = 769),
                 players = Players(max = 10, online = 0),
-                description = Description(text = "Bullet server"),
+                description = Description(text = "${Color.GOLD.toMinecraftCode()}This server runs as fast as a ${Color.UNDERLINE.toMinecraftCode()}${Color.BOLD.toMinecraftCode()}Bullet"),
                 enforcesSecureChat = false
             )
         }
