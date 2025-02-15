@@ -1,31 +1,37 @@
 package com.aznos.packets
 
-import com.aznos.datatypes.VarInt
 import com.aznos.datatypes.VarInt.readVarInt
 import com.aznos.datatypes.VarInt.writeVarInt
 import io.ktor.network.sockets.*
-import io.ktor.utils.io.*
 import io.ktor.utils.io.core.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import packets.Packet
+import packets.PacketRegistry
 
-data class Session(val socket: io.ktor.network.sockets.Socket) {
+data class Session(private val socket: Socket) {
     private val input = socket.openReadChannel()
     private val output = socket.openWriteChannel(autoFlush = true)
 
-    suspend fun <A: Any> writePacket(packetID: Int, serializePacket: BytePacketBuilder.() -> Unit) {
-        val packet = buildPacket {
-            writeVarInt(packetID)
-            serializePacket()
-        }
+    suspend fun sendPacket(packet: Packet) {
+        val data = packet.serialize()
+        val packetSize = buildPacket {
+            writeVarInt(data.size)
+        }.readBytes()
 
-        output.writeVarInt(VarInt.VarInt(packet.remaining.toInt()))
-        output.writePacket(packet)
+        withContext(Dispatchers.IO) {
+            output.writeFully(packetSize, 0, packetSize.size)
+            output.writeFully(data, 0, data.size)
+        }
     }
 
-    suspend fun <A: Any> receivePacket (deserializePacket: ByteReadPacket.() -> A,): A {
-        val size = input.readVarInt()
-        val packet = input.readPacket(size.toInt())
-        val id = packet.readVarInt().toInt()
+    suspend fun readPacket(): Packet? {
+        return withContext(Dispatchers.IO) {
+            val packetSize = input.readVarInt()
+            val packetData = input.readPacket(packetSize.toInt())
+            val packetID = packetData.readVarInt().toInt()
 
-        return deserializePacket(packet)
+            PacketRegistry.getPacket(packetID, packetData)
+        }
     }
 }
