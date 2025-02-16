@@ -5,4 +5,5 @@ enum class SessionState {
     STATUS,
 
     LOGIN_START,
+    LOGIN_ACKNOWLEDGED,
 }

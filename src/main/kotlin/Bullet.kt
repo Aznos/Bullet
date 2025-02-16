@@ -74,11 +74,12 @@ private suspend fun handleLogin(session: Session) {
     when(val packet = session.readPacket()) {
         is LoginStartPacket -> {
             session.sendPacket(LoginSuccessPacket.createDefault())
+            session.setState(SessionState.LOGIN_ACKNOWLEDGED)
             when(val acknowledgedPacket = session.readPacket()) {
                 is LoginAcknowledgedPacket -> logger.info("Client acknowledged login")
-                else -> logger.warn("Expected LoginAcknowledgedPacket, reeived: ${acknowledgedPacket?.javaClass?.simpleName}")
+                else -> logger.warn("Expected LoginAcknowledgedPacket, received: ${acknowledgedPacket?.javaClass?.simpleName}")
             }
-        } else -> logger.warn("Expected LoginStartPacket, reeived: ${packet?.javaClass?.simpleName}")
+        } else -> logger.warn("Expected LoginStartPacket, received: ${packet?.javaClass?.simpleName}")
     }
 }
 
@@ -86,7 +87,9 @@ private fun registerPackets() {
     listOf(
         Triple(0x00, SessionState.HANDSHAKE, HandshakePacket.Companion::deserialize),
         Triple(0x00, SessionState.STATUS, StatusRequestPacket.Companion::deserialize),
-        Triple(0x01, SessionState.STATUS, PingRequestPacket.Companion::deserialize)
+        Triple(0x01, SessionState.STATUS, PingRequestPacket.Companion::deserialize),
+        Triple(0x00, SessionState.LOGIN_START, LoginStartPacket.Companion::deserialize),
+        Triple(0x03, SessionState.LOGIN_ACKNOWLEDGED, LoginAcknowledgedPacket.Companion::deserialize)
     ).forEach { (id, state, deserializer) ->
         PacketRegistry.register(id, state, deserializer)
     }
