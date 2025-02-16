@@ -7,6 +7,7 @@ import io.ktor.network.sockets.*
 import kotlinx.coroutines.*
 import packets.Session
 import packets.SessionState
+import packets.clientbound.ConfigurationDisconnectPacket
 import packets.clientbound.LoginSuccessPacket
 import packets.clientbound.PongResponsePacket
 import packets.clientbound.StatusResponsePacket
@@ -76,7 +77,12 @@ private suspend fun handleLogin(session: Session) {
             session.sendPacket(LoginSuccessPacket.createDefault())
             session.setState(SessionState.LOGIN_ACKNOWLEDGED)
             when(val acknowledgedPacket = session.readPacket()) {
-                is LoginAcknowledgedPacket -> logger.info("Client acknowledged login")
+                is LoginAcknowledgedPacket -> {
+                    logger.info("Client acknowledged login")
+                    session.sendPacket(ConfigurationDisconnectPacket(reason = "Work in progress"))
+                    delay(500)
+                    session.close()
+                }
                 else -> logger.warn("Expected LoginAcknowledgedPacket, received: ${acknowledgedPacket?.javaClass?.simpleName}")
             }
         } else -> logger.warn("Expected LoginStartPacket, received: ${packet?.javaClass?.simpleName}")
