@@ -3,5 +3,6 @@ package packets
 enum class SessionState {
     HANDSHAKE,
     STATUS,
-    LOGIN
+
+    LOGIN_START,
 }

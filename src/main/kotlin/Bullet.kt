@@ -7,11 +7,10 @@ import io.ktor.network.sockets.*
 import kotlinx.coroutines.*
 import packets.Session
 import packets.SessionState
+import packets.clientbound.LoginSuccessPacket
 import packets.clientbound.PongResponsePacket
 import packets.clientbound.StatusResponsePacket
-import packets.serverbound.HandshakePacket
-import packets.serverbound.PingRequestPacket
-import packets.serverbound.StatusRequestPacket
+import packets.serverbound.*
 
 fun main(): Unit = runBlocking(SupervisorJob()) {
     val selectorManager = ActorSelectorManager(Dispatchers.IO)
@@ -45,8 +44,13 @@ private suspend fun handleSession(socket: Socket) {
             return
         }
 
-        session.setState(SessionState.STATUS)
-        processStatus(session)
+        if(handshake.nextState == 1) {
+            session.setState(SessionState.STATUS)
+            processStatus(session)
+        } else if(handshake.nextState == 2) {
+            session.setState(SessionState.LOGIN_START)
+            handleLogin(session)
+        }
     } catch(e: Exception) {
         logger.warn("Unexpected error: ${e.message}")
     } finally {
@@ -63,6 +67,18 @@ private suspend fun processStatus(session: Session) {
                 else -> logger.warn("Expected PingRequestPacked, received: ${pingPacket?.javaClass?.simpleName}")
             }
         } else -> logger.warn("Expected StatusRequestPacket, received: ${packet?.javaClass?.simpleName}")
+    }
+}
+
+private suspend fun handleLogin(session: Session) {
+    when(val packet = session.readPacket()) {
+        is LoginStartPacket -> {
+            session.sendPacket(LoginSuccessPacket.createDefault())
+            when(val acknowledgedPacket = session.readPacket()) {
+                is LoginAcknowledgedPacket -> logger.info("Client acknowledged login")
+                else -> logger.warn("Expected LoginAcknowledgedPacket, reeived: ${acknowledgedPacket?.javaClass?.simpleName}")
+            }
+        } else -> logger.warn("Expected LoginStartPacket, reeived: ${packet?.javaClass?.simpleName}")
     }
 }
 
