@@ -8,7 +8,7 @@ import com.aznos.packets.Packet
  */
 class ServerKeepAlivePacket(
     payload: Long
-) : Packet(0x1F) {
+) : Packet(0x27) {
     init {
         wrapper.writeLong(payload)
     }

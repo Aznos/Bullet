@@ -12,15 +12,13 @@ import java.util.concurrent.Executors
  * This is where the core of the bullet server logic will be housed
  */
 object Bullet : AutoCloseable {
-    const val PROTOCOL: Int = 754 // Protocol version 769 = Minecraft version 1.16.5
-    const val VERSION: String = "1.16.5"
+    const val PROTOCOL: Int = 769
+    const val VERSION: String = "1.21.4"
     const val MAX_PLAYERS: Int = 20
     const val DESCRIPTION: String = "§6Runs as fast as a bullet"
 
     private val pool = Executors.newCachedThreadPool()
     private var server: ServerSocket? = null
-
-    var dimensionCodec: CompoundTag? = null
 
     /**
      * Creates and runs the server instance
@@ -32,13 +30,6 @@ object Bullet : AutoCloseable {
         server = ServerSocket().apply {
             bind(InetSocketAddress(host, port))
         }
-
-        val reader = javaClass.getResourceAsStream("/codec.json")?.let {
-            InputStreamReader(it)
-        }
-
-        val parsed = JsonParser.parseReader(reader).asJsonObject
-        dimensionCodec = CompoundTag().fromJson(parsed, 0, TagTypeRegistry())
 
         println("Bullet server started at $host:$port")
 
@@ -70,4 +61,5 @@ object Bullet : AutoCloseable {
     override fun close() {
         server?.close()
     }
+
 }

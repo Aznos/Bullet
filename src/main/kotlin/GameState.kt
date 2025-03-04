@@ -7,5 +7,6 @@ enum class GameState {
     HANDSHAKE,
     STATUS,
     LOGIN,
+    CONFIGURATION,
     PLAY
 }

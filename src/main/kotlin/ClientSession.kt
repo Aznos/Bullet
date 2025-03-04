@@ -7,11 +7,15 @@ import com.aznos.events.PlayerQuitEvent
 import com.aznos.packets.Packet
 import com.aznos.packets.PacketHandler
 import com.aznos.packets.PacketRegistry
+import com.aznos.packets.configuration.out.ServerConfigRegistryData
+import com.aznos.packets.login.`in`.ClientLoginStartPacket
 import com.aznos.packets.login.out.ServerLoginDisconnectPacket
 import com.aznos.packets.play.out.ServerChatMessagePacket
 import com.aznos.packets.play.out.ServerKeepAlivePacket
 import com.aznos.packets.play.out.ServerPlayDisconnectPacket
 import com.aznos.player.ChatPosition
+import com.aznos.registry.Registries
+import dev.dewy.nbt.tags.collection.CompoundTag
 import net.kyori.adventure.text.TextComponent
 import java.io.DataInputStream
 import java.net.Socket
@@ -106,6 +110,43 @@ class ClientSession(
 
         EventManager.fire(PlayerQuitEvent(username!!))
         close()
+    }
+
+    fun sendRegistries() {
+        sendPacket(ServerConfigRegistryData(Registries.dimension_type))
+        sendPacket(ServerConfigRegistryData(Registries.biomes))
+        sendPacket(ServerConfigRegistryData(Registries.wolf_variant))
+        sendPacket(ServerConfigRegistryData(Registries.damage_type))
+
+        sendPacket(
+            ServerConfigRegistryData("minecraft:painting_variant", listOf(
+                ServerConfigRegistryData.RawEntry("minecraft:alban", CompoundTag().apply {
+                    putString("asset_id", "minecraft:alban")
+                    putInt("height", 1)
+                    putInt("width", 1)
+                    putString("title", "gg")
+                    putString("author", "gg")
+                })
+            ))
+        )
+    }
+
+    fun isClientValid(packet: ClientLoginStartPacket): Boolean {
+        if(protocol > Bullet.PROTOCOL) {
+            disconnect("Please downgrade your minecraft version to " + Bullet.VERSION)
+            return false
+        } else if(protocol < Bullet.PROTOCOL) {
+            disconnect("Your client is outdated, please upgrade to minecraft version " + Bullet.VERSION)
+            return false
+        }
+
+        val username = packet.username
+        if(!username.matches(Regex("^[a-zA-Z0-9]{3,16}$"))) { // Alphanumeric and 3-16 characters
+            disconnect("Invalid username")
+            return false
+        }
+
+        return true
     }
 
     /**

@@ -1,28 +1,35 @@
 package com.aznos.packets
 
-import com.aznos.packets.play.out.ServerChunkPacket
 import com.aznos.Bullet
 import com.aznos.ClientSession
 import com.aznos.GameState
 import com.aznos.events.*
+import com.aznos.packets.configuration.out.ServerConfigFinishPacket
+import com.aznos.packets.data.ChunkData
 import com.aznos.packets.data.ServerStatusResponse
+import com.aznos.packets.data.buildLightData
 import com.aznos.packets.login.`in`.ClientLoginStartPacket
 import com.aznos.packets.login.out.ServerLoginSuccessPacket
 import com.aznos.packets.play.`in`.ClientChatMessagePacket
 import com.aznos.packets.play.`in`.ClientKeepAlivePacket
+import com.aznos.packets.play.out.ServerGameEvent
 import com.aznos.packets.play.out.ServerJoinGamePacket
-import com.aznos.packets.play.out.ServerPlayerPositionAndLookPacket
+import com.aznos.packets.play.out.ServerLevelChunkWithLightPacket
+import com.aznos.packets.play.out.ServerSetChunkCacheCenterPacket
+import com.aznos.packets.play.out.ServerSyncPlayerPosition
 import com.aznos.packets.status.`in`.ClientStatusPingPacket
 import com.aznos.packets.status.`in`.ClientStatusRequestPacket
 import com.aznos.packets.status.out.ServerStatusPongPacket
 import com.aznos.player.GameMode
+import dev.dewy.nbt.api.registry.TagTypeRegistry
+import dev.dewy.nbt.tags.collection.CompoundTag
 import kotlinx.serialization.json.Json
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextColor
 import packets.handshake.HandshakePacket
 import packets.status.out.ServerStatusResponsePacket
-import java.util.UUID
+import java.util.*
 
 /**
  * Handles all incoming packets by dispatching them to the appropriate handler methods
@@ -86,49 +93,60 @@ class PacketHandler(
         EventManager.fire(preJoinEvent)
         if(preJoinEvent.isCancelled) return
 
-        if(client.protocol > Bullet.PROTOCOL) {
-            client.disconnect("Please downgrade your minecraft version to " + Bullet.VERSION)
-            return
-        } else if(client.protocol < Bullet.PROTOCOL) {
-            client.disconnect("Your client is outdated, please upgrade to minecraft version " + Bullet.VERSION)
-            return
-        }
+        client.isClientValid(packet)
 
-        val username = packet.username
-        if(!username.matches(Regex("^[a-zA-Z0-9]{3,16}$"))) { // Alphanumeric and 3-16 characters
-            client.disconnect("Invalid username")
-            return
-        }
-
-        val uuid = UUID.nameUUIDFromBytes(("OfflinePlayer:$username").toByteArray())
-        client.username = username
+        val uuid = UUID.nameUUIDFromBytes(("OfflinePlayer:${packet.username}").toByteArray())
+        client.username = packet.username
         client.uuid = uuid
 
-        client.sendPacket(ServerLoginSuccessPacket(uuid, username))
+        client.sendPacket(ServerLoginSuccessPacket(uuid, packet.username))
+        client.state = GameState.CONFIGURATION
+
+        client.sendRegistries()
+
+        client.sendPacket(ServerConfigFinishPacket())
         client.state = GameState.PLAY
 
         client.sendPacket(ServerJoinGamePacket(
             0,
             false,
-            GameMode.CREATIVE,
-            "minecraft:overworld",
-            Bullet.dimensionCodec!!,
-            Bullet.MAX_PLAYERS,
+            listOf("minecraft:overworld"),
+            0,
             8,
-            reducedDebugInfo = false,
-            enableRespawnScreen = true,
-            isDebug = false,
-            isFlat = true
+            false,
+            true,
+            0,
+            "minecraft:overworld",
+            GameMode.SPECTATOR,
+            false
         ))
 
-        client.sendPacket(ServerPlayerPositionAndLookPacket(8.5, 2.0, 8.5, 0f, 0f))
+        client.sendPacket(ServerGameEvent(13, 0f))
+        client.sendPacket(ServerSyncPlayerPosition(0, 8.5, 0.0, 8.5, 0.0, 5.0, 0.0, 0f, 90f))
+        client.sendPacket(ServerSetChunkCacheCenterPacket())
 
-        val joinEvent = PlayerJoinEvent(client.username!!)
-        EventManager.fire(joinEvent)
-        if(joinEvent.isCancelled) return
+        val heightmapTag = CompoundTag().apply {
+            putLongArray("MOTION_BLOCKING", ChunkData.createHeightmapData())
+            putLongArray("WORLD_SURFACE", ChunkData.createHeightmapData())
+        }
+
+        val chunkDataBytes = ChunkData.buildChunkData()
+        val chunkData = ChunkData(
+            heightMaps = heightmapTag,
+            data = chunkDataBytes,
+            blockEntities = emptyList()
+        )
+
+        val lightData = buildLightData()
+        client.sendPacket(ServerLevelChunkWithLightPacket(
+            x = 0,
+            z = 0,
+            chunkData,
+            lightData,
+            TagTypeRegistry()
+        ))
 
         client.scheduleKeepAlive()
-        client.sendPacket(ServerChunkPacket(0, 0))
     }
 
     /**

@@ -39,6 +39,13 @@ object PacketRegistry {
 
         packets[GameState.LOGIN] = loginPackets
 
+        //CONFIGURATION
+        val configurationPackets = ConcurrentHashMap<Int, Class<out Packet>>().apply {
+
+        }
+
+        packets[GameState.CONFIGURATION] = configurationPackets
+
         //PLAY
         val playPackets = ConcurrentHashMap<Int, Class<out Packet>>().apply {
             this[0x03] = ClientChatMessagePacket::class.java

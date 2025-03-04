@@ -2,6 +2,7 @@ package com.aznos.packets.login.out
 
 import com.aznos.datatypes.StringType.writeString
 import com.aznos.datatypes.UUIDType.writeUUID
+import com.aznos.datatypes.VarInt.writeVarInt
 import com.aznos.packets.Packet
 import java.util.UUID
 
@@ -16,5 +17,6 @@ class ServerLoginSuccessPacket(uuid: UUID, username: String) : Packet(0x02) {
     init {
         wrapper.writeUUID(uuid)
         wrapper.writeString(username)
+        wrapper.writeVarInt(0)
     }
 }
